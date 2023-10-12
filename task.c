@@ -2,26 +2,26 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int task_queue_init(task_queue q,int size)
+int task_queue_init(task_queue *q,int size)
 {
-    q.queue = (task*)malloc(sizeof(task) * size);
-    if(q.queue == NULL)
+    q->queue = (task*)malloc(sizeof(task) * size);
+    if(q->queue == NULL)
     {
         printf("Failed to malloc a task_queue\n");
         return -1;
     }
-    q.front = 0;
-    q.rear = 0;
-    q.len = 0;
-    q.size = size;
+    q->front = 0;
+    q->rear = 0;
+    q->len = 0;
+    q->size = size;
     return 0;
 }
-void task_queue_put(task_queue q,task t)
+void task_queue_put(task_queue *q,task t)
 {   
     t.ti = clock();
-    q.queue[q.rear] = t;
-    ++q.len;
-    q.rear = (q.rear + 1) % q.size;
+    q->queue[q->rear] = t;
+    ++q->len;
+    q->rear = (q->rear + 1) % q->size;
     return;
 }
 task task_queue_get(task_queue q)

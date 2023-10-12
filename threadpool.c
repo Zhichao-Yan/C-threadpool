@@ -21,7 +21,7 @@ threadpool* threadpool_init(int corePoolSize,int max_threads,int max_queue)
     pool->live = MIN_THREADS;
     pool->state = running;
     do{        
-        if(task_queue_init(pool->tq,max_queue) != 0)
+        if(task_queue_init(&(pool->tq),max_queue) != 0)
         {
             printf("Failed to initialzie a taskqueue!\n");
             break;
@@ -218,7 +218,7 @@ void Produce(threadpool *pool,task t)
     {
         pthread_cond_wait(&(pool->not_full), &(pool->lock));
     }
-    task_queue_put(pool->tq,t); // 添加任务到队列
+    task_queue_put(&(pool->tq),t); // 添加任务到队列
     pthread_cond_signal(&(pool->not_empty)); // 唤醒所有工作线程
     pthread_mutex_unlock(&(pool->lock)); // 解锁
     return;

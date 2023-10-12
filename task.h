@@ -17,8 +17,8 @@ typedef struct task_queue
     int size; // 任务队列大小
 }task_queue;
 
-int task_queue_init(task_queue q,int size);
-void task_queue_put(task_queue q,task t);
+int task_queue_init(task_queue *q,int size);
+void task_queue_put(task_queue *q,task t);
 task task_queue_get(task_queue q);
 void task_queue_destroy(task_queue q);
 void execute(void*(*function)(void*),void* arg);
