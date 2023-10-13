@@ -19,7 +19,7 @@ typedef struct task_queue
 
 int task_queue_init(task_queue *q,int size);
 void task_queue_put(task_queue *q,task t);
-task task_queue_get(task_queue q);
+task task_queue_get(task_queue *q);
 void task_queue_destroy(task_queue q);
 void execute(void*(*function)(void*),void* arg);
 int task_queue_empty(task_queue q);

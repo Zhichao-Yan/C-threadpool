@@ -159,7 +159,7 @@ void* Work(void* arg)
             pthread_mutex_unlock(&pool->lock);
             break;
         }
-        task t = task_queue_get(pool->tq); // 取出任务
+        task t = task_queue_get(&(pool->tq)); // 取出任务
         double ck = (double)(clock() - t.ti)/CLOCKS_PER_SEC * 1000; // 该任务在队列中等待的时间（毫秒）
         pool->task_wait_time = get_avg(ck);
         pthread_cond_signal(&(pool->not_full));// 通知生产线程任务队列不为满，可以继续放入任务

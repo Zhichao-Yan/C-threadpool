@@ -24,13 +24,13 @@ void task_queue_put(task_queue *q,task t)
     q->rear = (q->rear + 1) % q->size;
     return;
 }
-task task_queue_get(task_queue q)
+task task_queue_get(task_queue *q)
 {
-    task re = q.queue[q.front]; // 任务数据被拷贝走，可以置空了
-    q.queue[q.front].arg = NULL; // 把取走的任务数据指针置空
-    q.queue[q.front].function = NULL; // 把取走的任务函数指针置空
-    q.front = (q.front + 1) % q.size;
-    --q.len;
+    task re = q->queue[q->front]; // 任务数据被拷贝走，可以置空了
+    q->queue[q->front].arg = NULL; // 把取走的任务数据指针置空
+    q->queue[q->front].function = NULL; // 把取走的任务函数指针置空
+    q->front = (q->front + 1) % q->size;
+    --q->len;
     return re;
 }
 
