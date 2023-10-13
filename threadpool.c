@@ -1,7 +1,7 @@
 #include "threadpool.h"
 #include "time.h"
 #include <unistd.h>
-#define MIN_THREADS 5 // 最低要求运行的线程数
+#define MIN_THREADS 1 // 最低要求运行的线程数
 #define DEFAULT_ADD_NUM 5
 
 
