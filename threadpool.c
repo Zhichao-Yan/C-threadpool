@@ -90,6 +90,7 @@ void* Admin(void* arg)
     while(pool->state)
     {
         sleep(rand()%10); // 随机抽时间检查运行状况
+        printf("Admin thread slept for a while!!\n");
         pthread_mutex_lock(&(pool->lock));     
         queue_usage = (double)pool->tq.len / pool->tq.size;  
         avg_time = pool->task_wait_time;   
@@ -150,6 +151,7 @@ void* Work(void* arg)
         while(task_queue_empty(pool->tq)&&pool->state)
         {
             pthread_cond_wait(&(pool->not_empty),&pool->lock);//本身是一个取消点
+            print("thread%ld wake up!!\n",pthread_self());
         }
         if(pool->state == shutdown)
         {
