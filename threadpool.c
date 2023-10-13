@@ -151,7 +151,7 @@ void* Work(void* arg)
         while(task_queue_empty(pool->tq)&&pool->state)
         {
             pthread_cond_wait(&(pool->not_empty),&pool->lock);//本身是一个取消点
-            print("thread%ld wake up!!\n",pthread_self());
+            printf("thread%ld wake up!!\n",pthread_self());
         }
         if(pool->state == shutdown)
         {
