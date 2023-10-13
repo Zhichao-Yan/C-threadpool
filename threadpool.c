@@ -20,6 +20,10 @@ threadpool* threadpool_init(int corePoolSize,int max_threads,int max_queue)
     pool->busy = 0;
     pool->live = MIN_THREADS;
     pool->state = running;
+    pthread_mutex_init(&pool->mutex,NULL);
+    pthread_mutex_init(&pool->lock,NULL);
+    pthread_cond_init(&pool->not_empty,NULL);
+    pthread_cond_init(&pool->not_full,NULL);
     do{        
         if(task_queue_init(&(pool->tq),max_queue) != 0)
         {
@@ -40,10 +44,7 @@ threadpool* threadpool_init(int corePoolSize,int max_threads,int max_queue)
         }
         pthread_create(&(pool->admin),NULL,Admin,(void*)pool);
 
-        pthread_mutex_init(&pool->mutex,NULL);
-        pthread_mutex_init(&pool->lock,NULL);
-        pthread_cond_init(&pool->not_empty,NULL);
-        pthread_cond_init(&pool->not_full,NULL);
+
         return pool;
     }while(0);
     threadpool_free(pool);
