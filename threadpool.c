@@ -2,7 +2,7 @@
 #include "time.h"
 #include <unistd.h>
 #define MIN_THREADS 3 // 最低要求运行的线程数
-#define DEFAULT_ADD_NUM 5
+#define DEFAULT_ADD_NUM 5 // 线程不足时，默认自增的线程数
 
 
 threadpool* threadpool_init(int corePoolSize,int max_threads,int max_queue)
@@ -15,14 +15,14 @@ threadpool* threadpool_init(int corePoolSize,int max_threads,int max_queue)
     }
     // 分配成功
     pool->min_threads = MIN_THREADS;
-    pool->core_pool_size = corePoolSize;
+    pool->core_pool_size = corePoolSize; // 核心线程数
     pool->max_threads = max_threads;
     pool->busy = 0;
     pool->live = MIN_THREADS;
     pool->state = running;
-    pthread_mutex_init(&pool->mutex,NULL);
-    pthread_mutex_init(&pool->lock,NULL);
-    pthread_cond_init(&pool->not_empty,NULL);
+    pthread_mutex_init(&pool->mutex,NULL); // 初始化互斥量，保护busy共享数据
+    pthread_mutex_init(&pool->lock,NULL); // 初始化互斥量，保护队列互斥访问
+    pthread_cond_init(&pool->not_empty,NULL); // 初始化条件变量，此时条件状态为队列非空
     pthread_cond_init(&pool->not_full,NULL);
     do{        
         if(task_queue_init(&(pool->tq),max_queue) != 0)
@@ -148,7 +148,6 @@ void clean(void *arg)
     threadpool *pool = (threadpool*)arg;
     pthread_mutex_unlock(&pool->lock);
     printf("thread:%ld响应取消退出\n",pthread_self());
-    system("pause");// 查看退出的该线程暂停执行
     return;
 }
 void* Work(void* arg)
@@ -188,7 +187,7 @@ void* Work(void* arg)
     pthread_cleanup_pop(0);
     return NULL;
 } 
-
+// 获得最近3个任务的队列中平均等待时间
 double get_avg(double ck)
 {
     static double t[3] = {0.0,0.0,0.0};
@@ -197,41 +196,13 @@ double get_avg(double ck)
     i = (i + 1) % 3;
     return (t[0] + t[1] + t[2]) / 3;
 }
-/*
-double get_mean(double ck)
-{
-    static double t[5] = {0.0};
-    static mean;
-    static i = 0;
-    mean = mean + (ck - t[i]) / 5;
-    t[i] = ck;
-    i = (i + 1) % 5;
-    return mean;
-}
-double time_mean(double t,int size) // 求采样平均值
-{
-    static int index = 1;
-    static double last_mean = 0.0;
-    double mean = 0.0;
-    if(index < size)
-    {
-        mean = last_mean+(t-last_mean)/index;
-        index++;
-    }else{
-        mean = last_mean+(t-last_mean)/size;
-        index = 1;
-    }
-    last_mean = mean;
-    return mean;
-}
-*/
 
 void Produce(threadpool *pool,task t)
 {
     pthread_mutex_lock(&(pool->lock));
-    while (task_queue_full(pool->tq))
+    while (task_queue_full(pool->tq)) // 当队列为满，进入循环
     {
-        pthread_cond_wait(&(pool->not_full), &(pool->lock));
+        pthread_cond_wait(&(pool->not_full), &(pool->lock)); // 当条件状态变为非满，线程醒来
     }
     task_queue_put(&(pool->tq),t); // 添加任务到队列
     pthread_cond_signal(&(pool->not_empty)); // 唤醒所有工作线程
