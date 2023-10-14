@@ -40,5 +40,5 @@ void* Admin(void* arg);
 void* Work(void* arg);
 void Produce(threadpool *pool,task t);
 void* func(void* arg);
-double get_avg(double ck);
+double get_avg_time(double ck);
 #endif
