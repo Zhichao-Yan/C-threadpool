@@ -98,9 +98,9 @@ void* Admin(void* arg)
         pthread_mutex_unlock(&(pool->mutex));
         live = pool->live; 
         busy_ratio = (double)busy / live;
-        printf("当前线程池状态：\
+        printf("此时线程池状态：\
         \n队列使用率：%f\n队列平均等待时间：%f(ms)\n线程使用率：%d/%d\n",queue_usage,avg_time,busy,live);
-        if(busy_ratio < 0.5&&live > MIN_THREADS) // 删除线程
+	if(busy_ratio < 0.5&&live > MIN_THREADS) // 删除线程
         {
             int exit_num;
             if(MIN_THREADS > live * 0.5)
@@ -134,7 +134,7 @@ void* Admin(void* arg)
                 {
                     pthread_create(&(threads[j].tid),NULL,Work,(void*)pool);
                     printf("新增线程%ld\n",threads[j].tid);
-                    ++pool->live;
+		    ++pool->live;
                     threads[j].state = 1;
                     i++;
                 }
