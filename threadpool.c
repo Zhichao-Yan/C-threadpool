@@ -143,8 +143,15 @@ void* Admin(void* arg)
     pthread_exit(NULL);
 }
 
+void clean(void *arg)
+{
+    threadpool *pool = (threadpool*)arg;
+    pthread_mutex_unlock(&pool->lock);
+    return;
+}
 void* Work(void* arg)
 {
+    pthread_cleanup_push(clean,arg);
     threadpool *pool = (threadpool*)arg;
     while(1)
     {
@@ -174,6 +181,7 @@ void* Work(void* arg)
         pthread_mutex_unlock(&(pool->mutex));  
         pthread_testcancel(); // 取消点
     }
+    pthread_cleanup_pop(0);
     pthread_exit(NULL);
 } 
 
