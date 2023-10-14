@@ -91,9 +91,8 @@ void* Admin(void* arg)
     while(pool->state)
     {
         sleep(rand()%10); // 随机抽时间检查运行状况
-        printf("Admin thread slept for a while!!\n");
         pthread_mutex_lock(&(pool->lock));     
-        queue_usage = (double)pool->tq.len / pool->tq.size;  
+        queue_usage = (double)pool->tq.len / pool->tq.size;
         avg_time = pool->task_wait_time;   
         pthread_mutex_unlock(&(pool->lock));   
         pthread_mutex_lock(&(pool->mutex));
@@ -101,6 +100,7 @@ void* Admin(void* arg)
         pthread_mutex_unlock(&(pool->mutex));
         live = pool->live; 
         busy_ratio = (double)busy / live;
+        printf("Admin监测到当前线程池状态：\n队列使用率：%f-队列平均等待时间：%f(ms)-线程使用率：%d/%d\n",queue_usage,avg_time,busy,live);
         if(busy_ratio < 0.5&&live > MIN_THREADS) // 删除线程
         {
             int exit_num;
@@ -147,6 +147,8 @@ void clean(void *arg)
 {
     threadpool *pool = (threadpool*)arg;
     pthread_mutex_unlock(&pool->lock);
+    printf("thread:%ld响应取消退出\n",pthread_self());
+    system("pause");// 查看退出的该线程暂停执行
     return;
 }
 void* Work(void* arg)
@@ -159,7 +161,6 @@ void* Work(void* arg)
         while(task_queue_empty(pool->tq)&&pool->state)
         {
             pthread_cond_wait(&(pool->not_empty),&pool->lock);//本身是一个取消点
-            printf("thread%ld wake up!!\n",pthread_self());
         }
         if(pool->state == shutdown)
         {
@@ -175,14 +176,17 @@ void* Work(void* arg)
         pthread_mutex_lock(&(pool->mutex)); // 锁住互斥变量，该互斥变量保护在忙线程计数变量
         ++pool->busy;
         pthread_mutex_unlock(&(pool->mutex)); // 解锁互斥变量
+
         execute(t.function,t.arg); // 正在处理任务
+
         pthread_mutex_lock(&(pool->mutex)); 
         --pool->busy;
-        pthread_mutex_unlock(&(pool->mutex));  
+        pthread_mutex_unlock(&(pool->mutex)); 
+
         pthread_testcancel(); // 取消点
     }
     pthread_cleanup_pop(0);
-    pthread_exit(NULL);
+    return NULL;
 } 
 
 double get_avg(double ck)
@@ -239,7 +243,7 @@ void Produce(threadpool *pool,task t)
 void* func(void* arg)
 {
     int id = *((int*)arg);
-    printf("helloworld!第%d个任务\n",id);
+    printf("处理第%d个任务\n",id);
     free(arg); // 任务执行完成，释放堆分配的内存
     return NULL;
 }
