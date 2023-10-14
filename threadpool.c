@@ -21,6 +21,7 @@ threadpool* threadpool_init(int corePoolSize,int max_threads,int max_queue)
     pool->busy = 0;
     pool->live = MIN_THREADS;
     pool->state = running;
+    // 因为pool是动态分配的，所以需要动态初始化互斥量和条件变量
     pthread_mutex_init(&pool->mutex,NULL); // 初始化互斥量，保护busy共享数据
     pthread_mutex_init(&pool->lock,NULL); // 初始化互斥量，保护队列互斥访问
     pthread_cond_init(&pool->not_empty,NULL); // 初始化条件变量，此时条件状态为队列非空
@@ -62,6 +63,7 @@ void threadpool_destroy(threadpool* pool)
 {
     pool->state = shutdown;
     pthread_cond_broadcast(&(pool->not_empty));// 广播所有工作线程醒过来
+    /*    
     pthread_join(pool->admin, NULL);
     worker_t *threads = pool->workers;
     for (int i = 0; i < pool->max_threads; i++)
@@ -72,6 +74,7 @@ void threadpool_destroy(threadpool* pool)
             threads[i].state = 0;
         }
     }
+    */
     pthread_mutex_destroy(&pool->mutex);
     pthread_mutex_destroy(&pool->lock);
     pthread_cond_destroy(&pool->not_empty);
@@ -81,6 +84,7 @@ void threadpool_destroy(threadpool* pool)
 }
 void* Admin(void* arg)
 {
+    pthread_detach(pthread_self());
     srand(time(NULL)); // 播下时间种子
     threadpool *pool = (threadpool*)arg;
     double busy_ratio; // 忙的线程占存活线程比例
@@ -155,6 +159,7 @@ void clean(void *arg)
 }
 void* Work(void* arg)
 {
+    pthread_detach(pthread_self());
     pthread_cleanup_push(clean,arg); // 注册清理函数，线程响应取消时执行清理函数
     threadpool *pool = (threadpool*)arg;
     while(pool->state) // 线程池在running则继续循环
@@ -167,7 +172,7 @@ void* Work(void* arg)
         if(pool->state == shutdown)
         {
             pthread_mutex_unlock(&pool->lock);
-            break;
+            break; // 跳出循环不会执行清理函数
         }
         task t = task_queue_get(&(pool->tq)); // 取出任务
         double ck = (double)(clock() - t.ti)/CLOCKS_PER_SEC * 1000; // 该任务在队列中等待的时间（毫秒）
@@ -188,7 +193,7 @@ void* Work(void* arg)
         pthread_testcancel(); // 取消点
     }
     pthread_cleanup_pop(0); // 弹出清理函数，参数为0，正常运行结束不会执行清理函数
-    return NULL;
+    return NULL; 
 } 
 
 // 获得最近3个任务的队列中平均等待时间
