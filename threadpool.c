@@ -43,8 +43,6 @@ threadpool* threadpool_init(int corePoolSize,int max_threads,int max_queue)
             threads[i].state = 1;
         }
         pthread_create(&(pool->admin),NULL,Admin,(void*)pool);
-
-
         return pool;
     }while(0);
     threadpool_free(pool);
@@ -113,7 +111,8 @@ void* Admin(void* arg)
             {
                 if(threads[j].state == 1)
                 {
-                    pthread_cancel(threads[i].tid);
+                    pthread_cancel(threads[j].tid);
+                    printf("取消线程%ld\n",threads[j].tid);
                     --pool->live;
                     threads[j].state = 0;
                     i++;
@@ -130,9 +129,10 @@ void* Admin(void* arg)
             worker_t *threads = pool->workers;
             for(int i = 0,j = 0;j < pool->max_threads && i < add_num;j++)
             {
-                if(threads[j].state == 0)
+                if(threads[j].state == 0) 
                 {
                     pthread_create(&(threads[j].tid),NULL,Work,(void*)pool);
+                    printf("新增线程%ld\n",threads[j].tid);
                     ++pool->live;
                     threads[j].state = 1;
                     i++;
