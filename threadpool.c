@@ -63,18 +63,6 @@ void threadpool_destroy(threadpool* pool)
 {
     pool->state = shutdown;
     pthread_cond_broadcast(&(pool->not_empty));// 广播所有工作线程醒过来
-    /*    
-    pthread_join(pool->admin, NULL);
-    worker_t *threads = pool->workers;
-    for (int i = 0; i < pool->max_threads; i++)
-    {
-        if(threads[i].state == 1)
-        {
-            pthread_join(threads[i].tid, NULL);
-            threads[i].state = 0;
-        }
-    }
-    */
     pthread_mutex_destroy(&pool->mutex);
     pthread_mutex_destroy(&pool->lock);
     pthread_cond_destroy(&pool->not_empty);
