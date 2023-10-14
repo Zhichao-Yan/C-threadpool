@@ -104,16 +104,16 @@ void* Admin(void* arg)
 	    if(busy_ratio < 0.5&&pool->live > MIN_THREADS) // 取消线程
         {
             int exit_num = 0; // 打算取消的线程
-            if(MIN_THREADS > pool->live * 0.5)
+            if(MIN_THREADS > pool->live * 0.5) // 如果最小线程数大于线程数的0.5，那么不应该取消太多
                 exit_num = pool->live - MIN_THREADS;
             else
-                exit_num = pool->live * 0.5;
+                exit_num = pool->live * 0.5; // 如果最小线程数小于于线程数的0.5，那么尝试直接删除一半
             worker_t *threads = pool->workers;
             for(int i = 0,j = 0; i< exit_num && j < pool->max_threads;j++)
             {
                 if(threads[j].state == 1)
                 {
-                    pthread_cancel(threads[j].tid);
+                    pthread_cancel(threads[j].tid); // 给线程发送取消信号
                     printf("取消线程%ld\n",threads[j].tid);
                     --pool->live;
                     threads[j].state = 0;
@@ -124,16 +124,16 @@ void* Admin(void* arg)
         if(busy_ratio >= 0.8 && queue_usage > 0.8)
         {
             int add_num = 0;
-            if(pool->live < pool->core_pool_size)
-                add_num = DEFAULT_INCREMENT1;
+            if(pool->live < pool->core_pool_size) // 如果当前线程数小于核心线程数
+                add_num = DEFAULT_INCREMENT1; // 以2为单位逐渐递增
             else
-                add_num = DEFAULT_INCREMENT2;
+                add_num = DEFAULT_INCREMENT2; // 如果当前线程数大于核心线程数，则以5为单位递增
             worker_t *threads = pool->workers;
             for(int i = 0,j = 0;j < pool->max_threads && i < add_num;j++)
             {
                 if(threads[j].state == 0) 
                 {
-                    pthread_create(&(threads[j].tid),NULL,Work,(void*)pool);
+                    pthread_create(&(threads[j].tid),NULL,Work,(void*)pool); // 创建新线程
                     printf("新增线程%ld\n",threads[j].tid);
 		            ++pool->live;
                     threads[j].state = 1;
