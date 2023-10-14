@@ -157,7 +157,7 @@ void* Work(void* arg)
 {
     pthread_cleanup_push(clean,arg); // 注册清理函数，线程响应取消时执行清理函数
     threadpool *pool = (threadpool*)arg;
-    while(1)
+    while(pool->state) // 线程池在running则继续循环
     {
         pthread_mutex_lock(&pool->lock);
         while(task_queue_empty(pool->tq)&&pool->state)
