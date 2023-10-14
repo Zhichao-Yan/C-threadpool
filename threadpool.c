@@ -53,20 +53,23 @@ threadpool* threadpool_init(int corePoolSize,int max_threads,int max_queue)
 
 void threadpool_free(threadpool* pool)
 {
-    task_queue_destroy(pool->tq); // destroy a taskqueue 
     free(pool->workers);
+    pthread_mutex_destroy(&pool->mutex);
+    pthread_mutex_destroy(&pool->lock);
+    pthread_cond_destroy(&pool->not_empty);
+    pthread_cond_destroy(&pool->not_full);
+    task_queue_destroy(pool->tq); // destroy a taskqueue
     free(pool);
     return;
 }
 
 void threadpool_destroy(threadpool* pool)
 {
+    /* 广播所有阻塞的工作线程醒过来 
+    ** 在处理任务的线程会处理完后自动跳出循环
+    */
     pool->state = shutdown;
-    pthread_cond_broadcast(&(pool->not_empty));// 广播所有工作线程醒过来
-    pthread_mutex_destroy(&pool->mutex);
-    pthread_mutex_destroy(&pool->lock);
-    pthread_cond_destroy(&pool->not_empty);
-    pthread_cond_destroy(&pool->not_full);
+    pthread_cond_broadcast(&(pool->not_empty));
     threadpool_free(pool);
     return;
 }
