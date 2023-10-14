@@ -99,9 +99,7 @@ void* Admin(void* arg)
         live = pool->live; 
         busy_ratio = (double)busy / live;
         printf("当前线程池状态：\
-        \n队列使用率：%f\
-        \n队列平均等待时间：%f(ms)\
-        \n线程使用率：%d/%d\n",queue_usage,avg_time,busy,live);
+        \n队列使用率：%f\n队列平均等待时间：%f(ms)\n线程使用率：%d/%d\n",queue_usage,avg_time,busy,live);
         if(busy_ratio < 0.5&&live > MIN_THREADS) // 删除线程
         {
             int exit_num;
